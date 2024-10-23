@@ -1,0 +1,33 @@
+{% extends "home.html" %}
+
+{% block title %}Flasky - Edit Profile{% endblock %}
+{% block comment %} {% endblock %}
+
+
+{% block content %}
+
+<div class="page-header">
+    <h1>Edit Your Profile</h1>
+</div>
+<div>
+    
+    <form method="POST" class="comment_form">
+        {{ form.hidden_tag() }}
+        
+            {{ form.name.label }}
+            {{ form.name(class="comment_input") }}
+        
+        
+            {{ form.location.label }}
+            {{ form.location(class="comment_input") }}
+        
+        
+            {{ form.about_me.label }}
+            {{ form.about_me(class="comment_input") }}
+        
+        
+            {{ form.submit(class="comment_button") }}
+        
+    </form>
+</div>
+{% endblock %}

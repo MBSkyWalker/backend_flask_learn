@@ -1,0 +1,90 @@
+{% extends "home.html" %}
+
+{% block title %} Flasky - {{ user.name }} {% endblock %}
+
+{% block comment %} {% endblock %}
+{% block user %}
+
+<div class="page-header">
+    <!-- <input type="file" id="fileInput" accept="image/png, image/jpeg, image/svg+xml">
+    <div id="avatarContainer"></div> -->
+    <img src="{{ user.gravatar(size=240) }}" alt="avatar">
+    <div class="user_info_cont">
+        
+        {% if user.name %}<h1>{{ user.name }}</h1>{% endif %}
+       
+    
+   
+    {% if user.name or user.location %}
+    <p>
+    
+    {% if user.location %}
+    From <a href="http://maps.google.com/?q={{ user.location }}">
+    {{ user.location }}
+    </a>
+    {% endif %}
+    </p>
+    {% endif %}
+    {% if current_user.is_admin() %}
+    <p><a href="mailto:{{ user.email }}">{{ user.email }}</a></p>
+    {% endif %}
+    {% if user.about_me %}<p>{{ user.about_me }}</p>{% endif %}
+    <p>
+    <div>Member since {{ formatted_timestamp }}</div>
+    <p>Last seen {{ formatted_timestamp2 }}</p>
+    </p>
+    {% if current_user.id == user.id %}
+    <a href="{{ url_for('edit_user_profile', id=user.id)}}"><button class="comment_button"> edit profile</button></a>
+    {% endif %}
+
+{% if user != current_user %}
+{% if current_user.is_following(user) %}
+<a href="{{ url_for('unfollow', username=user.name) }}" class="btn btn-default">Unfollow</a>
+{% else %}
+<a href="{{ url_for('follow', username=user.name) }}" class="btn btn-primary">Follow</a>
+{% endif %}
+
+{% endif %}
+Followers: <span>{{ followers }}</span>
+Followed <span> {{ followed }} </span>
+
+{% if current_user.is_authenticated and user != current_user and
+    user.is_following(current_user) %}
+    | <span class="label label-default">Follows you</span>
+    {% endif %}
+
+    </div>
+    
+</div>
+<div>
+<ul class="posts">
+    {% for post in posts %}
+    <li class="post">
+    <div class="profile-thumbnail">
+    <a href="{{ url_for('.user', username=post.author.name) }}">
+    <img class="img-rounded profile-thumbnail"
+    src="{{ post.author.gravatar(size=60) }}">
+    </a>
+    <div> {{ post.author.name }}</div>
+    </div>
+    <div class="post-date">{{ post.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</div>
+    <div class="post-author">
+    <a href="{{ url_for('.user', username=post.author.username) }}">
+    {{ post.author.username }}
+    </a>
+    </div>
+    <div class="post-body">{{ post.body }}</div>
+    <div class="buttons_cont">
+        <a href="{{ url_for('post', id=post.id) }}" class="see_more">See more</a>
+        {% if current_user.id == user.id %}
+        <a href="{{ url_for('edit_post', id=post.id)}}"><button class="comment_button">Edit post</button> </a>
+        {% endif %}
+
+    </div>
+
+    </li>
+    {% endfor %}
+    </ul>
+     
+</div>
+{% endblock %}

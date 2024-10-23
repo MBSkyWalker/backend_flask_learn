@@ -1,0 +1,29 @@
+{% extends "home.html" %}
+
+{% block title %} Login {% endblock %}
+{% block content %}
+
+{% endblock %}
+{% block login %}
+<form action="/sign_up" method="post" class="comment_form">
+    <input name="username" type="text" class="comment_input" placeholder="username" required minlength="1" maxlength="64">
+    <input name="email" type="text" class="comment_input" placeholder="email" required minlength="1" maxlength="64">
+    <input name="password" type="password" class="comment_input" placeholder="password" required minlength="6">
+    <input name="password_confirm" type="password" class="comment_input" placeholder="password confirm" required minlength="6">
+    <div>
+    <label for="remember_me"> Remember me</label>
+    <input type="checkbox" class="remember_me" name="remember_me">
+    </div>
+    <button class="comment_button" type="submit"> Log in</button>
+
+</form>
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        
+            {% for message in messages %}
+                <div class="flash_message">{{ message }}</div>
+            {% endfor %}
+        
+    {% endif %}
+{% endwith %}
+{% endblock %}

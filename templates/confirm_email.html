@@ -1,0 +1,12 @@
+
+{% extends "home.html" %}
+
+{% block email_confirm %}
+
+<form action="/confirm_email"  method="post" class="comment_form">
+    <h4> Confirmation number was sent on your email, type it</h4>
+    <input type="text" class="comment_input" name="confirm_email" placeholder="number">
+    <button class="comment_button" type="submit"> Confirm email</button>
+</form>
+
+{% endblock %}

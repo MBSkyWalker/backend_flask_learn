@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% block head %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Document{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+    <link rel="shortcut icon", href="{{ url_for('static', filename='icon.png') }}" >
+    
+    
+    
+
+    
+    {% endblock %}
+</head>
+<body>
+    <header>
+        <div class="icon"></div>
+        <ul class="header_list">
+            <li><a href="/">home</a></li>
+              {% if current_user.is_authenticated %}
+        <li><a href="{{ url_for('logout') }}">Logout</a></li>
+    {% else %}
+        <!-- <li><a href="{{ url_for('response') }}">Response</a></li> -->
+        <li><a href="{{ url_for('login') }}">Login</a></li>
+        <li><a href="{{ url_for('sign_up') }}">Sign Up</a></li>
+    {% endif %}
+            <li> <a href="{{ url_for('user', username=current_user.name) }}"> Profile</a></li>
+            <li><a href="/write-post">Write post</a></li>
+            <li><a href="/posts">Feed</a></li>
+        </ul>
+        {% block header %} {% endblock %}
+    </header>
+    {% block content %}
+    
+    
+    {% block not_found %} {% endblock %}
+    {% endblock %}
+    {% block login %} {% endblock %}
+    {% block email_confirm %} {% endblock %}
+    {% with messages = get_flashed_messages() %}
+    {% block user %} {% endblock %}
+    {% block post %} {% endblock %}
+    {% block write_post %} {% endblock %}
+    {% block one_post %} {% endblock %}
+    
+    {% if messages %}
+        
+            {% for message in messages %}
+                <div class="flash_message">{{ message }}</div>
+            {% endfor %}
+        
+    {% endif %}
+{% endwith %}
+
+
+{% block comment %}
+<form action="/" class="comment_form", method="post">
+    <input type="text" class="comment_input", name="comment_body" placeholder="Напишіть коментар">
+    <button type="submit" class="comment_button"> Залишити коментар</button>
+</form>
+
+{% endblock %}
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

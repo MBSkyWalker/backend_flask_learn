@@ -1,0 +1,20 @@
+{% extends "home.html" %}
+
+{% block comment %} {% endblock %}
+{% block write_post %}
+<div>
+    <form method="POST" action="/write-post" class="comment_form">
+        {{ form.hidden_tag() }}
+        
+            {{ form.body.label }}
+            {{ form.body(class="comment_input") }}
+        
+            {{ form.submit(class="comment_button") }}
+
+    </form>
+</div>
+
+
+{% endblock %}
+
+

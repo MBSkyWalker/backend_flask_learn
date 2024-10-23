@@ -1,0 +1,19 @@
+{% extends "home.html" %}
+
+{% block title %} Login {% endblock %}
+{% block content %}
+
+{% endblock %}
+{% block login %}
+<form action="/login" method="post" class="comment_form">
+    <input name="email" type="text" class="comment_input" placeholder="email" required minlength="1" maxlength="64">
+    <input name="password" type="password" class="comment_input" placeholder="password" required minlength="6">
+    <input type="checkbox" class="remember_me" name="remember_me">
+    <button class="comment_button" type="submit"> Log in</button>
+    
+
+</form>
+
+<a href="/google_login"><button class="comment_button">Login with Google</button></a>
+
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "home.html" %}
+
+{% block comment %} {% endblock %}
+
+
+{% block one_post %}
+
+<h1>Edit your post </h1>
+<div>
+    
+    <form method="POST"  class="comment_form">
+        {{ form.hidden_tag() }}
+         {{ form.body.label }}
+         {{ form.body(class="comment_input") }}
+
+           
+        
+        
+            {{ form.submit(class="comment_button") }}
+        
+    </form>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "home.html" %}
+
+{% block comment %} {% endblock %}
+
+
+{% block one_post %}
+{% for post in posts %}
+<ul class="posts">
+    {% for post in posts %}
+    <li class="post">
+        <div class="profile-thumbnail">
+            <a href="{{ url_for('.user', username=post.author.name) }}">
+                <img class="img-rounded profile-thumbnail"
+                     src="{{ post.author.gravatar(size=60) }}">
+            </a>
+            <div>{{ post.author.name }}</div>
+        </div>
+
+        <div class="post-date">
+            {{ post.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}
+        </div>
+
+        <div class="post-author">
+            <a href="{{ url_for('.user', username=post.author.name) }}">
+                {{ post.author.username }}
+            </a>
+        </div>
+
+        <div class="post-body">{{ post.body }}</div>
+        
+    </li>
+    {% else %}
+    <li>No posts available.</li>
+    {% endfor %}
+</ul>
+{% endfor %}
+{% endblock %}
