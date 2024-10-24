@@ -1,0 +1,9 @@
+{% extends 'home.html' %}
+
+{% block comment %}
+<form action="/create_comment" class="comment_form", method="post">
+    <input type="text" class="comment_input", name="comment_body" placeholder="Напишіть коментар">
+    <button type="submit" class="comment_button"> Залишити коментар</button>
+</form>
+
+{% endblock %}

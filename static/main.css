@@ -130,3 +130,38 @@ header, li, a{
 .post a{
     width: 100%;
 }
+
+.follower_info_cont {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin: 10px 0;
+    display: flex;
+    align-items: center;
+  }
+
+  .follower_info_cont img {
+    margin-right: 10px;
+    border-radius: 50%;
+  }
+
+.follower_info_cont p{
+    margin-right: 20px;
+}
+
+.btn-primary{
+    background-color: lightgreen;
+    margin-bottom: 20px;
+    margin-top: 20px;
+}
+
+.filter-options{
+    display: flex;
+    flex-direction: column;
+}
+
+.followers_followed_links{
+    display: flex;
+}
+.followers_followed_links a{
+    margin: 20px;
+}

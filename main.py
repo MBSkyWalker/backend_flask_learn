@@ -118,6 +118,11 @@ class User(UserMixin, db.Model):
 
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
 
+
+    @property
+    def followed_posts(self):
+        return Post.query.join(Follow, Follow.followed_id==Post.author_id).filter(Follow.follower_id==self.id)
+
     @property
     def password(self):
         raise AttributeError('password is not a readable attribute')
@@ -332,6 +337,12 @@ def page_not_found(e):
 @app.route('/', methods=['GET', 'POST'])
 def main():
     
+    
+
+    return render_template('home.html')
+
+@app.route('/create-comment', methods=['GET', 'POST'])
+def create_comment():
     if request.method == 'POST':
         body = request.form.get('comment_body')
         
@@ -343,11 +354,9 @@ def main():
         msg = Message(subject=theme, sender=app.config['MAIL_USERNAME'], recipients=[current_user.email])
         msg.body = body
         send_email(msg)
+
+    return render_template('comment.html')
         
-
-    return render_template('home.html')
-
-
 
 
 @app.route('/response')
@@ -475,7 +484,7 @@ def user(username):
     dt_object2 = datetime.strptime(timestamp2, '%Y-%m-%d %H:%M:%S.%f')
     formatted_timestamp = dt_object.strftime('%Y-%m-%d %H:%M:%S')
     formatted_timestamp2 = dt_object2.strftime('%Y-%m-%d %H:%M:%S')
-    
+
     # рахунок підписок та підписників (я вигадав)
     user_followers = user.follower.all()
     user_followed = user.followed.all()
@@ -512,30 +521,35 @@ def edit_user_profile(id):
 @app.route('/posts', methods=['GET', 'POST'])
 @login_required
 def posts():
-    # отримуємо номер сторінки з параметрів запиту, за замовчуванням 1
     page = request.args.get('page', 1, type=int)
     
-    # отримуємо пости з пагінацією
-    pagination = Post.query.order_by(Post.timestamp.desc()).paginate(
-        page=page,
-        per_page=2,  # Переконайтеся, що це значення правильно задане
-        error_out=False
-        
-    )
-    pagination.iter_pages(left_edge=2, left_current=2, right_current=5, right_edge=2)
-    
-    # отримуємо пости для поточної сторінки
+    # Отримуємо значення cookie для визначення, що показувати (всі пости або пости від підписників)
+    show_followed = request.cookies.get('show_followed', '')
+
+    if show_followed:
+        # Якщо cookie встановлено (тобто користувач вибрав перегляд постів від підписників)
+        # Зв'язування таблиць між собою з допомогою метода join
+        pagination = Post.query.join(Follow, Follow.followed_id == Post.author_id)\
+            .filter(Follow.follower_id == current_user.id)\
+            .order_by(Post.timestamp.desc())\
+            .paginate(page=page, per_page=3, error_out=False)
+    else:
+        # Якщо cookie немає або користувач вибрав перегляд усіх постів
+        pagination = Post.query.order_by(Post.timestamp.desc()).paginate(
+            page=page, per_page=3, error_out=False
+        )
+
+    # Отримуємо пости для поточної сторінки
     posts = pagination.items
     
     return render_template('posts.html', posts=posts, pagination=pagination)
-
 
 @app.route('/write-post', methods=['GET', 'POST'])
 @login_required
 def write_post():
     form = PostForm()
     
-    if current_user.can(Permission.WRITE) and form.validate_on_submit():
+    if form.validate_on_submit():
         post = Post(body=form.body.data,
                     author=current_user._get_current_object())
         
@@ -602,7 +616,7 @@ def google_login():
 
 @app.route('/follow/<username>')
 @login_required
-@permission_required(Permission.FOLLOW)
+
 def follow(username):
     user = User.query.filter_by(name=username).first()
     if user is None:
@@ -641,3 +655,51 @@ def unfollow(username):
         print('Something went wrong: %s' % str(e))
     
     return redirect(url_for('user', username=username))
+
+
+@app.route('/followers/<username>')
+def followers(username):
+    user = User.query.filter_by(name=username).first_or_404()
+
+    # Отримуємо номер сторінки з URL
+    page = request.args.get('page', 1, type=int)
+
+    # Використовуємо paginate для розбиття на сторінки
+    pagination = user.follower.paginate(page=page, per_page=10, error_out=False)
+
+    # Отримуємо список підписників для поточної сторінки
+    followers = [{'follower': follow.follower, 'timestamp': follow.timestamp} for follow in pagination.items]
+
+    return render_template('followers.html', user=user, followers=followers, pagination=pagination)
+
+
+@app.route('/followed/<username>')
+def followed(username):
+    user = User.query.filter_by(name=username).first_or_404()
+
+    # Отримуємо номер сторінки з URL
+    page = request.args.get('page', 1, type=int)
+
+    # Використовуємо paginate для розбиття на сторінки
+    pagination = user.followed.paginate(page=page, per_page=10, error_out=False)
+
+    # Отримуємо список тих, на кого користувач підписаний
+    followed_users = [{'followed': follow.followed, 'timestamp': follow.timestamp} for follow in pagination.items]
+
+    return render_template('followed.html', user=user, followed_users=followed_users, pagination=pagination)
+
+
+@login_required 
+@app.route('/all')
+def show_all():
+    resp = make_response(redirect(url_for('posts')))
+    resp.set_cookie('show_followed', '', max_age=30*24*60*60) # 30 days
+    return resp
+
+@login_required 
+@app.route('/followed') 
+def show_followed():
+    resp = make_response(redirect(url_for('posts')))
+    resp.set_cookie('show_followed', '1', max_age=30*24*60*60) # 30 days
+    return resp
+

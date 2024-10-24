@@ -4,6 +4,14 @@
 
 {% block post %}
 <ul class="posts">
+    <div class="filter-options">
+        <a href="{{ url_for('show_all') }}" class="{{ 'btn-primary' if not request.cookies.get('show_followed') else 'btn-secondary' }}">
+          Всі пости
+        </a>
+        <a href="{{ url_for('show_followed') }}" class="{{ 'btn-primary' if request.cookies.get('show_followed') else 'btn-secondary' }}">
+          Пости від ваших підписок
+        </a>
+      </div>
     {% for post in posts %}
     <li class="post">
         <div class="profile-thumbnail">

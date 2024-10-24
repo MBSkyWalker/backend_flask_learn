@@ -45,8 +45,10 @@
 {% endif %}
 
 {% endif %}
-Followers: <span>{{ followers }}</span>
-Followed <span> {{ followed }} </span>
+<div class="followers_followed_links">
+    <a href="{{ url_for('followers', username=user.name) }}">Followers: <span>{{ followers }}</span></a>
+    <a href="{{ url_for('followed', username=user.name) }}">Followed: <span>{{ followed }}</span></a>
+</div>
 
 {% if current_user.is_authenticated and user != current_user and
     user.is_following(current_user) %}

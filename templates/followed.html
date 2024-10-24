@@ -1,0 +1,37 @@
+{% extends 'home.html' %}
+{% block title %} {{ user.name }} followed{% endblock %}
+{% block comment %}
+{% endblock %}
+
+{% block followers %}
+{% for follow in followed_users %}
+  <div class="follower_info_cont">
+    <a href="{{ url_for('.user', username=follow.followed.name) }}">
+      <img src="{{ follow.followed.gravatar(size=40) }}" alt="avatar">
+    </a>
+
+      <p>{{ follow.followed.name }}</p>
+      <p>Followed since {{ follow.timestamp.strftime('%Y-%m-%d') }}</p>
+    
+  </div>
+{% endfor %}
+
+{% if pagination.pages > 1 %}
+  <nav>
+    <ul class="pagination">
+      {% if pagination.has_prev %}
+        <a href="{{ url_for('followed', username=user.name, page=pagination.prev_num) }}"></a>
+      {% endif %}
+      {% for page_num in pagination.iter_pages() %}
+      
+          <a href="{{ url_for('followed', username=user.name, page=page_num) }}">{{ page_num }}</a>
+        
+      {% endfor %}
+      {% if pagination.has_next %}
+        <a href="{{ url_for('followed', username=user.name, page=pagination.next_num) }}"></a>
+      {% endif %}
+    </ul>
+  </nav>
+{% endif %}
+
+{% endblock %}
