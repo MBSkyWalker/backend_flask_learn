@@ -6,6 +6,9 @@
 {% block comment %} {% endblock %}
 {% block followers %}
 {% for follower in followers %}
+{% if follower.follower.name == user.name %}
+
+{% else %}
   <div class="follower_info_cont">
   <a href="{{ url_for('.user', username=follower.follower.name) }}">
     <img src="{{ follower.follower.gravatar(size=40) }}" alt="avatar">
@@ -13,6 +16,8 @@
   <p>{{ follower.follower.name }}</p><br>
   <p>Followed you {{ follower.timestamp.strftime('%Y-%m-%d') }}</p>
    </div>
+
+  {% endif %}
 {% endfor %}
 
 

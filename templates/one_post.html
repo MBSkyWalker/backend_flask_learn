@@ -6,7 +6,7 @@
 {% block one_post %}
 {% for post in posts %}
 <ul class="posts">
-    {% for post in posts %}
+    
     <li class="post">
         <div class="profile-thumbnail">
             <a href="{{ url_for('.user', username=post.author.name) }}">
@@ -33,5 +33,61 @@
     <li>No posts available.</li>
     {% endfor %}
 </ul>
+
+<div class="user_info_cont">
+    <h3>Comment post:</h3>
+    <form method="POST"  class="comment_form">
+            {{ form.hidden_tag() }}
+            
+                {{ form.body.label }}
+                {{ form.body(class="comment_input") }}
+            
+                {{ form.submit(class="comment_button") }}
+    
+        </form>
+    </div>
+
+
+
+<p>Comments: </p>
+{% for comment in comments %}
+{% if not comment.disabled %}
+<div class="follower_info_cont">
+<div class="user_info_cont">
+    <a href="{{ url_for('.user', username=comment.user.name) }}">
+        <img src="{{ comment.user.gravatar(size=40) }}" alt="avatar">
+      </a>
+    <div>{{ comment.user.name }}</div>
+
+    <div>{{ comment.body }}</div>
+
+    <div>{{ comment.timestamp.strftime('%Y-%m-%d') }}</div>
+    {% if current_user.is_admin() %}
+
+      <a href="{{ url_for('disable_comment',  id=comment.id) }}"><button  class="comment_button">Disable comment</button></a>
+    {% endif %}
+{% endif %}
+    
+
+    
+    
+    
+
+</div>
+</div>
 {% endfor %}
+
+{% if pagination.has_prev %}
+<a href="{{ url_for('post',id=post.id, page=pagination.prev_num) }}"></a>
+
+{% endif %}
+
+{% if pagination.has_next %}
+<a href="{{ url_for('post', id=post.id, page=pagination.next_num) }}"></a>
+
+{% endif %}
+
+
+
+
 {% endblock %}

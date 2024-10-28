@@ -1,0 +1,28 @@
+{% extends "home.html" %}
+
+{% block comment %} {% endblock %}
+
+{% block disabled_comments %}
+
+
+<p>Comments: </p>
+{% for comment in comments %}
+{% if comment.disabled %}
+<div class="follower_info_cont">
+<div class="user_info_cont">
+    <a href="{{ url_for('.user', username=comment.user.name) }}">
+        <img src="{{ comment.user.gravatar(size=40) }}" alt="avatar">
+      </a>
+    <div>{{ comment.user.name }}</div>
+
+    <div>{{ comment.body }}</div>
+
+    <div>{{ comment.timestamp.strftime('%Y-%m-%d') }}</div>
+    
+
+      <a href="{{ url_for('enable_comment',  id=comment.id) }}"><button  class="comment_button">Enable comment</button></a>
+    
+    {% endif %}
+{% endfor %}
+    
+{% endblock %}

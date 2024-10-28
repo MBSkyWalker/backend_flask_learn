@@ -25,6 +25,9 @@
             <li><a href="/write-post">Write post</a></li>
             <li><a class="ref" href="/posts">Feed</a></li>
             <li><a href="{{ url_for('create_comment') }}">Create comment</a></li>
+            {% if current_user.is_admin() %}
+            <li><a href="{{ url_for('show_disabled')}}">Show disabled</a></li>
+            {% endif %}
         
     {% else %}
         <!-- <li><a href="{{ url_for('response') }}">Response</a></li> -->
@@ -55,6 +58,7 @@
     {% block write_post %} {% endblock %}
     {% block one_post %} {% endblock %}
     {% block followers %} {% endblock %}
+    {% block disabled_comments %}{% endblock %}
     {% if messages %}
         
             {% for message in messages %}

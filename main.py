@@ -10,7 +10,7 @@ from flask_mail import Mail, Message
 import random
 from datetime import datetime 
 from flask_moment import Moment
-from forms import EditProfileForm, PostForm, EditPostFrom
+from forms import EditProfileForm, PostForm, EditPostFrom, CommentForm
 import oauthlib
 
 
@@ -25,6 +25,8 @@ app = Flask(__name__)
 
 app.config['SECRET_KEY'] = 'I like monkeys'
 app.config['FLASKY_POST_PER_PAGE'] = 3
+
+app.config['FLASKY_COMMENTS_PER_PAGE'] = 5
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.config["SQLALCHEMY_DATABASE_URI"] = \
@@ -116,9 +118,17 @@ class User(UserMixin, db.Model):
 
     comments = db.relationship('Comment', backref='user', lazy='dynamic')
 
+    post_comments = db.relationship('PostComment', backref='user', lazy='dynamic')
+
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
 
-
+    @staticmethod
+    def add_self_follows():
+        for user in User.query.all():
+            if not user.is_following(user):
+                user.follow(user)
+                db.session.add(user)
+                db.session.commit()
     @property
     def followed_posts(self):
         return Post.query.join(Follow, Follow.followed_id==Post.author_id).filter(Follow.follower_id==self.id)
@@ -142,6 +152,8 @@ class User(UserMixin, db.Model):
                 self.role = Role.query.filter_by(name='Admin').first()
                 if self.role is None:
                     self.role = Role.query.filter_by(default=True)
+
+        self.follow(self)
 
         if self.email is not None and self.avatar_hash is None:
             self.avatar_hash = self.gravatar_hash()
@@ -227,7 +239,7 @@ def posts(count=100):
     db.session.commit()
 
 
-    
+
 class AnonymousUser(AnonymousUserMixin):
     def can(self, permissions):
         return False
@@ -254,7 +266,16 @@ class Post(db.Model):
 
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
+    post_comments = db.relationship('PostComment', backref='post', lazy='dynamic')
+class PostComment(db.Model):
+    __tablename__ = 'post_comments'
+    id = db.Column(db.Integer, primary_key=True)
+    body = db.Column(db.Text)
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.now)
+    disabled = db.Column(db.Boolean)
 
+    author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
     
 class Role(db.Model):
     __tablename__ = 'roles'
@@ -458,6 +479,7 @@ def confirm_email():
         user_confirm_number = request.form.get('confirm_email')
         if user_confirm_number == session.get('confirm_number'):
             current_user.confirmed = True
+            
             db.session.commit()  # Збереження змін в базу даних
             return 'You confirmed your account successfully'
         else:
@@ -497,7 +519,8 @@ def user(username):
 
     for u in user_followed:
         followed += 1
-
+    followers -= 1
+    followed -= 1
     return render_template('user.html', user=user, formatted_timestamp=formatted_timestamp, formatted_timestamp2=formatted_timestamp2,
                            posts=posts, followers=str(followers), followed=str(followed))
 
@@ -560,10 +583,61 @@ def write_post():
     
     return render_template('write_post.html', form=form)
 
-@app.route('/post/<int:id>')
+
+@app.route('/post/<int:id>', methods=['GET', 'POST'])
 def post(id):
     post = Post.query.get_or_404(id)
-    return render_template('one_post.html', posts=[post])
+    form = CommentForm()
+
+    if form.validate_on_submit():
+        comment = PostComment(
+            body=form.body.data,
+            post_id=post.id,
+            author_id= current_user.id,
+            disabled=False
+        )
+        db.session.add(comment)
+        db.session.commit()
+
+        return redirect(url_for('.post', id=post.id, page=-1))
+    
+    page = request.args.get('page', 1, type=int)
+    if page == -1:
+        page = (post.post_comments.count() - 1) // app.config['FLASKY_COMMENTS_PER_PAGE'] + 1
+
+    pagination = post.post_comments.order_by(PostComment.timestamp.asc()).paginate(
+        page=page, 
+        per_page=app.config['FLASKY_COMMENTS_PER_PAGE'],
+        error_out=False
+    )
+    comments = pagination.items
+    
+    return render_template(
+        'one_post.html', 
+        posts=[post], 
+        form=form,
+        comments=comments, 
+        pagination=pagination
+    )
+
+
+@app.route('/disable-comment/<int:id>')
+def disable_comment(id):
+    comment = PostComment.query.filter_by(id=id).first()
+    comment.disabled = True
+    db.session.commit()
+
+    return redirect(url_for('post', id=comment.post_id))
+
+@app.route('/enable-comment/<int:id>')
+def enable_comment(id):
+    comment = PostComment.query.filter_by(id=id).first()
+    comment.disabled = False
+    db.session.commit()
+
+    return redirect(url_for('post', id=comment.post_id))
+    
+    
 
 @app.route('/edit_post/<int:id>', methods=['GET', 'POST'])
 def edit_post(id):
@@ -703,3 +777,15 @@ def show_followed():
     resp.set_cookie('show_followed', '1', max_age=30*24*60*60) # 30 days
     return resp
 
+@login_required
+@admin_required
+@app.route('/show-disabled')
+def show_disabled():
+    page = request.args.get('page', 1, type=int)
+    pagination = PostComment.query.filter_by(disabled=True).order_by(PostComment.timestamp.desc()).paginate(
+    page=page, per_page=app.config['FLASKY_COMMENTS_PER_PAGE'],
+    error_out=False)
+    comments = pagination.items
+    return render_template('disabled_comment.html', comments=comments,
+    pagination=pagination, page=page)
+    

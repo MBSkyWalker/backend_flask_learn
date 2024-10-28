@@ -21,4 +21,8 @@ class EditPostFrom(FlaskForm):
     submit = SubmitField('Confirm')
 
 
+class CommentForm(FlaskForm):
+    body = StringField('', validators=[DataRequired()])
+    submit = SubmitField('Submit')
+
     
